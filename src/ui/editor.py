@@ -53,6 +53,38 @@ class MarkdownEditor(QPlainTextEdit):
                     selection-color: #ffffff;
                     border: none;
                 }
+                QScrollBar:vertical {
+                    background: #ffffff;
+                    width: 10px;
+                    margin: 0px;
+                }
+                QScrollBar::handle:vertical {
+                    background: #d0d7de;
+                    min-height: 20px;
+                    border-radius: 5px;
+                }
+                QScrollBar::handle:vertical:hover {
+                    background: #8c959f;
+                }
+                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                    height: 0px;
+                }
+                QScrollBar:horizontal {
+                    background: #ffffff;
+                    height: 10px;
+                    margin: 0px;
+                }
+                QScrollBar::handle:horizontal {
+                    background: #d0d7de;
+                    min-width: 20px;
+                    border-radius: 5px;
+                }
+                QScrollBar::handle:horizontal:hover {
+                    background: #8c959f;
+                }
+                QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+                    width: 0px;
+                }
             """)
             self.line_bg = QColor("#f6f8fa")
             self.line_fg = QColor("#57606a")
@@ -66,6 +98,38 @@ class MarkdownEditor(QPlainTextEdit):
                     selection-color: #ffffff;
                     border: none;
                 }
+                QScrollBar:vertical {
+                    background: #fbf0d9;
+                    width: 10px;
+                    margin: 0px;
+                }
+                QScrollBar::handle:vertical {
+                    background: #d5c3a3;
+                    min-height: 20px;
+                    border-radius: 5px;
+                }
+                QScrollBar::handle:vertical:hover {
+                    background: #b8a37e;
+                }
+                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                    height: 0px;
+                }
+                QScrollBar:horizontal {
+                    background: #fbf0d9;
+                    height: 10px;
+                    margin: 0px;
+                }
+                QScrollBar::handle:horizontal {
+                    background: #d5c3a3;
+                    min-width: 20px;
+                    border-radius: 5px;
+                }
+                QScrollBar::handle:horizontal:hover {
+                    background: #b8a37e;
+                }
+                QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+                    width: 0px;
+                }
             """)
             self.line_bg = QColor("#f2e3c6")
             self.line_fg = QColor("#7f6a4e")
@@ -78,6 +142,38 @@ class MarkdownEditor(QPlainTextEdit):
                     selection-background-color: #1f6feb;
                     selection-color: #ffffff;
                     border: none;
+                }
+                QScrollBar:vertical {
+                    background: #0d1117;
+                    width: 10px;
+                    margin: 0px;
+                }
+                QScrollBar::handle:vertical {
+                    background: #30363d;
+                    min-height: 20px;
+                    border-radius: 5px;
+                }
+                QScrollBar::handle:vertical:hover {
+                    background: #484f58;
+                }
+                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                    height: 0px;
+                }
+                QScrollBar:horizontal {
+                    background: #0d1117;
+                    height: 10px;
+                    margin: 0px;
+                }
+                QScrollBar::handle:horizontal {
+                    background: #30363d;
+                    min-width: 20px;
+                    border-radius: 5px;
+                }
+                QScrollBar::handle:horizontal:hover {
+                    background: #484f58;
+                }
+                QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+                    width: 0px;
                 }
             """)
             self.line_bg = QColor("#161b22")

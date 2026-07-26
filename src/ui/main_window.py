@@ -36,6 +36,12 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("AtMd Reader & Editor")
         self.resize(1200, 800)
 
+        icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets", "app_icon.png"))
+        if hasattr(sys, '_MEIPASS'):
+            icon_path = os.path.join(sys._MEIPASS, "src", "assets", "app_icon.png")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+
         self._init_ui()
         self._load_initial_state()
 

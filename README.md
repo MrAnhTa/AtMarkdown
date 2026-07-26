@@ -54,16 +54,24 @@
 
 ---
 
-## 🚀 Running the Application
+## 🚀 Running & Building the Application
 
-### Launch the GUI App:
+### Launch GUI App:
 ```powershell
 .\venv\Scripts\python run.py
 ```
 
-### Open a Specific Markdown File Directly:
+### Build Standalone Executable (.exe):
+You can automatically build the standalone Windows release `.exe` into the `output/` folder by running either script:
+
+**PowerShell**:
 ```powershell
-.\venv\Scripts\python run.py "C:\path\to\your\document.md"
+.\build_exe.ps1
+```
+
+**Command Prompt (CMD)**:
+```cmd
+build_exe.bat
 ```
 
 ---
