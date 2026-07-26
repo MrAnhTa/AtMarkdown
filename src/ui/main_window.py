@@ -1,4 +1,5 @@
 import os
+import sys
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QSplitter,
     QFileDialog, QMessageBox, QToolBar, QComboBox, QToolButton,
@@ -36,11 +37,20 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("AtMd Reader & Editor")
         self.resize(1200, 800)
 
-        icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets", "app_icon.png"))
+        icon = QIcon()
+        ico_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets", "app_icon.ico"))
+        png_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets", "app_icon.png"))
         if hasattr(sys, '_MEIPASS'):
-            icon_path = os.path.join(sys._MEIPASS, "src", "assets", "app_icon.png")
-        if os.path.exists(icon_path):
-            self.setWindowIcon(QIcon(icon_path))
+            ico_path = os.path.join(sys._MEIPASS, "src", "assets", "app_icon.ico")
+            png_path = os.path.join(sys._MEIPASS, "src", "assets", "app_icon.png")
+
+        if os.path.exists(ico_path):
+            icon.addFile(ico_path)
+        if os.path.exists(png_path):
+            icon.addFile(png_path)
+
+        if not icon.isNull():
+            self.setWindowIcon(icon)
 
         self._init_ui()
         self._load_initial_state()

@@ -32,19 +32,23 @@ def main():
     app.setApplicationName("AtMd Reader & Editor")
     app.setOrganizationName("ToolsBuilt")
 
-    # Set Application Icon
-    icon_path = get_asset_path(os.path.join("src", "assets", "app_icon.png"))
-    if not os.path.exists(icon_path):
-        icon_path = get_asset_path(os.path.join("src", "assets", "app_icon.ico"))
+    # Set Application Icon (prioritize .ico for Windows taskbar native WM_SETICON)
+    icon = QIcon()
+    ico_path = get_asset_path(os.path.join("src", "assets", "app_icon.ico"))
+    png_path = get_asset_path(os.path.join("src", "assets", "app_icon.png"))
 
-    if os.path.exists(icon_path):
-        icon = QIcon(icon_path)
+    if os.path.exists(ico_path):
+        icon.addFile(ico_path)
+    if os.path.exists(png_path):
+        icon.addFile(png_path)
+
+    if not icon.isNull():
         app.setWindowIcon(icon)
 
     config = ConfigManager()
     window = MainWindow(config)
-    if os.path.exists(icon_path):
-        window.setWindowIcon(QIcon(icon_path))
+    if not icon.isNull():
+        window.setWindowIcon(icon)
     
     # Check if file path passed via command line
     if len(sys.argv) > 1 and os.path.exists(sys.argv[1]):
