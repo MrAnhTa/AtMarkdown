@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtMarkdown Reader & Editor</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body class="theme-dark">
+    <!-- Top Navigation & Quick Access Toolbar -->
+    <header class="app-header">
+        <div class="menu-bar">
+            <div class="menu-actions">
+                <button id="btn-new" title="New File (Ctrl+N)">📄 New</button>
+                <button id="btn-open" title="Open Markdown File (Ctrl+O)">📂 Open</button>
+                <button id="btn-save" title="Save Document (Ctrl+S)">💾 Save</button>
+                <button id="btn-save-as" title="Save As... (Ctrl+Shift+S)">💾 Save As</button>
+                <button id="btn-export-html" title="Export to HTML">🌐 Export HTML</button>
+                <button id="btn-export-pdf" title="Export to PDF">📕 Export PDF</button>
+            </div>
+        </div>
+        <div class="toolbar-controls">
+            <div class="control-group">
+                <label for="mode-select">View:</label>
+                <select id="mode-select">
+                    <option value="reader">📖 Reader View</option>
+                    <option value="editor">✏️ Editor View</option>
+                    <option value="split" selected>⚡ Split Live Preview</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="theme-select">Theme:</label>
+                <select id="theme-select">
+                    <option value="dark" selected>🌙 Dark</option>
+                    <option value="light">☀️ Light</option>
+                    <option value="sepia">📜 Sepia</option>
+                </select>
+            </div>
+            <button id="btn-toggle-sidebar" class="icon-btn" title="Toggle Sidebar (Ctrl+B)">📌</button>
+        </div>
+    </header>
+
+    <!-- Quick Formatting Toolbar -->
+    <div class="formatting-bar" id="formatting-bar">
+        <button data-prefix="**" data-suffix="**" title="Bold (Ctrl+B)">B</button>
+        <button data-prefix="*" data-suffix="*" title="Italic (Ctrl+I)">I</button>
+        <button data-prefix="# " data-suffix="" title="Heading 1">H1</button>
+        <button data-prefix="## " data-suffix="" title="Heading 2">H2</button>
+        <button data-prefix="### " data-suffix="" title="Heading 3">H3</button>
+        <button data-prefix="`" data-suffix="`" title="Inline Code">Code</button>
+        <button data-prefix="```python&#10;" data-suffix="&#10;```" title="Code Block">``` Block</button>
+        <button data-prefix="[" data-suffix="](https://)" title="Insert Link">Link</button>
+        <button data-prefix="![alt](" data-suffix=")" title="Insert Image">Image</button>
+        <button data-prefix="> " data-suffix="" title="Blockquote">Quote</button>
+        <button data-prefix="- " data-suffix="" title="Unordered List">List</button>
+        <button data-prefix="- [ ] " data-suffix="" title="Checklist">Task</button>
+        <button data-prefix="| Header 1 | Header 2 |&#10;| --- | --- |&#10;| Cell 1 | Cell 2 |" data-suffix="" title="Insert Table">Table</button>
+    </div>
+
+    <!-- Main Workspace (Splitter Layout) -->
+    <main class="main-splitter" id="main-splitter">
+        <!-- 1. Left Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" data-tab="toc">📌 Outline</button>
+                <button class="tab-btn" data-tab="recent">🕒 Recent</button>
+            </div>
+            <div class="sidebar-content">
+                <div class="tab-pane active" id="pane-toc">
+                    <ul class="toc-tree" id="toc-tree">
+                        <li class="empty-msg">(No headings found)</li>
+                    </ul>
+                </div>
+                <div class="tab-pane" id="pane-recent">
+                    <ul class="recent-list" id="recent-list">
+                        <li class="empty-msg">(No recent files)</li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+        <div class="splitter-handle" id="handle-sidebar"></div>
+
+        <!-- 2. Center Editor Container -->
+        <section class="editor-container" id="editor-container">
+            <div class="editor-wrapper">
+                <div class="line-numbers" id="line-numbers">1</div>
+                <textarea id="code-editor" spellcheck="false" placeholder="Write Markdown content here..."></textarea>
+            </div>
+            <!-- Find Search Panel (Ctrl+F) -->
+            <div class="search-panel" id="search-panel" style="display: none;">
+                <span>Find:</span>
+                <input type="text" id="search-input" placeholder="Search text...">
+                <button id="search-prev">▲ Prev</button>
+                <button id="search-next">▼ Next</button>
+                <button id="search-close">✕</button>
+            </div>
+        </section>
+
+        <div class="splitter-handle" id="handle-editor"></div>
+
+        <!-- 3. Right Viewer Container -->
+        <section class="viewer-container" id="viewer-container">
+            <iframe id="preview-frame" title="Markdown Live Preview"></iframe>
+        </section>
+    </main>
+
+    <!-- Bottom Status Bar -->
+    <footer class="stats-bar">
+        <div class="file-path-indicator" id="file-path-indicator">Untitled.md</div>
+        <div class="stats-indicators">
+            <span id="stat-lines">Lines: 0</span>
+            <span class="divider">|</span>
+            <span id="stat-words">Words: 0</span>
+            <span class="divider">|</span>
+            <span id="stat-chars">Chars: 0</span>
+            <span class="divider">|</span>
+            <span id="stat-read">Read: ~0 min</span>
+            <span class="divider">|</span>
+            <span>UTF-8</span>
+            <span class="divider">|</span>
+            <span id="stat-mode">Mode: Split Live Preview</span>
+        </div>
+    </footer>
+
+    <script src="js/editor.js"></script>
+    <script src="js/formatting.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,6 +1,2 @@
-__pycache__
 /output
-/venv
-/build
-/build_exe.ps1
-/build_exe.bat
+/target
