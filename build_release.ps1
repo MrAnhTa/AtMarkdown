@@ -27,7 +27,7 @@ if (-not (Test-Path $DllSource)) {
     $DllSource = "target\release\WebView2Loader.dll"
 }
 
-$OutputDir = "output"
+$OutputDir = "dist"
 
 if (Test-Path $ExeSource) {
     if (-not (Test-Path $OutputDir)) {

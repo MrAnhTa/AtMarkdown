@@ -48,7 +48,7 @@ Run the PowerShell build script:
 ```powershell
 .\build_release.ps1
 ```
-The compiled single-file binary will be placed inside `output/AtMarkdown.exe` (**~5-8 MB**).
+The compiled single-file binary will be placed inside `dist/AtMarkdown.exe` (**~5-8 MB**).
 
 ---
 
