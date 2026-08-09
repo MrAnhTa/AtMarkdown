@@ -43,7 +43,7 @@ impl MarkdownEngine {
         };
 
         format!(
-            "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n<style>\n{}\n</style>\n</head>\n<body class=\"{}\">\n<div class=\"markdown-body\">\n{}\n</div>\n<script>\ndocument.addEventListener(\"DOMContentLoaded\", function() {{\n    const codeBlocks = document.querySelectorAll(\"pre\");\n    codeBlocks.forEach(function(pre) {{\n        const wrapper = document.createElement(\"div\");\n        wrapper.className = \"code-block-wrapper\";\n        pre.parentNode.insertBefore(wrapper, pre);\n        wrapper.appendChild(pre);\n\n        const btn = document.createElement(\"button\");\n        btn.className = \"copy-code-btn\";\n        btn.innerHTML = `<svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z\"></path><path fill-rule=\"evenodd\" d=\"M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z\"></path></svg> Copy`;\n        \n        btn.addEventListener(\"click\", function() {{\n            const codeText = pre.innerText || pre.textContent;\n            navigator.clipboard.writeText(codeText).then(function() {{\n                btn.innerHTML = `<svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"#3fb950\"><path fill-rule=\"evenodd\" d=\"M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z\"></path></svg> Copied!`;\n                setTimeout(function() {{\n                    btn.innerHTML = `<svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z\"></path><path fill-rule=\"evenodd\" d=\"M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z\"></path></svg> Copy`;\n                }}, 2000);\n            }});\n        }});\n        wrapper.appendChild(btn);\n    }});\n\n    // Ensure mouse wheel scrolling works reliably inside preview iframe\n    window.addEventListener(\"wheel\", function(e) {{\n        if (e.deltaY) {{\n            window.scrollBy(0, e.deltaY);\n        }}\n    }}, {{ passive: true }});\n\n    // Report scroll position to parent window for synchronized scrolling\n    let isPosting = false;\n    window.addEventListener(\"scroll\", function() {{\n        if (!isPosting) {{\n            isPosting = true;\n            requestAnimationFrame(function() {{\n                try {{\n                    if (window.parent && window.parent !== window) {{\n                        const doc = document.documentElement;\n                        const maxScroll = doc.scrollHeight - window.innerHeight;\n                        const ratio = maxScroll > 0 ? window.scrollY / maxScroll : 0;\n                        window.parent.postMessage({{ type: \"READER_SCROLL\", ratio: ratio }}, \"*\");\n                    }}\n                }} catch(e) {{}}\n                isPosting = false;\n            }});\n        }}\n    }});\n}});\n</script>\n</body>\n</html>",
+            "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n<style>\n{}\n</style>\n</head>\n<body class=\"{}\">\n<div class=\"markdown-body\">\n{}\n</div>\n<div class=\"pdf-footer\"><span class=\"pdf-page-number\"></span></div>\n<script>\ndocument.addEventListener(\"DOMContentLoaded\", function() {{\n    const codeBlocks = document.querySelectorAll(\"pre\");\n    codeBlocks.forEach(function(pre) {{\n        const wrapper = document.createElement(\"div\");\n        wrapper.className = \"code-block-wrapper\";\n        pre.parentNode.insertBefore(wrapper, pre);\n        wrapper.appendChild(pre);\n\n        const btn = document.createElement(\"button\");\n        btn.className = \"copy-code-btn\";\n        btn.innerHTML = `<svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z\"></path><path fill-rule=\"evenodd\" d=\"M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z\"></path></svg> Copy`;\n        \n        btn.addEventListener(\"click\", function() {{\n            const codeText = pre.innerText || pre.textContent;\n            navigator.clipboard.writeText(codeText).then(function() {{\n                btn.innerHTML = `<svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"#3fb950\"><path fill-rule=\"evenodd\" d=\"M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z\"></path></svg> Copied!`;\n                setTimeout(function() {{\n                    btn.innerHTML = `<svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z\"></path><path fill-rule=\"evenodd\" d=\"M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z\"></path></svg> Copy`;\n                }}, 2000);\n            }});\n        }});\n        wrapper.appendChild(btn);\n    }});\n\n    // Ensure mouse wheel scrolling works reliably inside preview iframe\n    window.addEventListener(\"wheel\", function(e) {{\n        if (e.deltaY) {{\n            window.scrollBy(0, e.deltaY);\n        }}\n    }}, {{ passive: true }});\n\n    // Report scroll position to parent window for synchronized scrolling\n    let isPosting = false;\n    window.addEventListener(\"scroll\", function() {{\n        if (!isPosting) {{\n            isPosting = true;\n            requestAnimationFrame(function() {{\n                try {{\n                    if (window.parent && window.parent !== window) {{\n                        const doc = document.documentElement;\n                        const maxScroll = doc.scrollHeight - window.innerHeight;\n                        const ratio = maxScroll > 0 ? window.scrollY / maxScroll : 0;\n                        window.parent.postMessage({{ type: \"READER_SCROLL\", ratio: ratio }}, \"*\");\n                    }}\n                }} catch(e) {{}}\n                isPosting = false;\n            }});\n        }}\n    }});\n}});\n</script>\n</body>\n</html>",
             Self::get_theme_css(),
             theme_class,
             body_html_with_ids
@@ -157,6 +157,70 @@ table th, table td { padding: 6px 13px; border: 1px solid currentColor; opacity:
 blockquote { padding: 0 1em; border-left: 0.25em solid currentColor; opacity: 0.8; margin: 0 0 16px 0; }
 ul, ol { padding-left: 2em; margin-bottom: 16px; }
 img { max-width: 100%; border-radius: 6px; }
+
+@media print {
+    @page {
+        margin: 12mm 15mm 15mm 15mm;
+        @top-left { content: ""; }
+        @top-center { content: ""; }
+        @top-right { content: ""; }
+        @bottom-left { content: ""; }
+        @bottom-center { content: ""; }
+        @bottom-right {
+            content: counter(page);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            color: #555555;
+        }
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background-color: #ffffff !important;
+        color: #1f2328 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    body.theme-dark, body.theme-sepia, body.theme-light {
+        background-color: #ffffff !important;
+        color: #1f2328 !important;
+    }
+
+    body.theme-dark a, body.theme-sepia a, body.theme-light a {
+        color: #0969da !important;
+    }
+
+    .markdown-body {
+        padding: 0 !important;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        color: #1f2328 !important;
+        page-break-after: avoid;
+        break-after: avoid;
+    }
+
+    pre {
+        background-color: #f6f8fa !important;
+        border: 1px solid #d0d7de !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    table, blockquote, img {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    .copy-code-btn, .pdf-footer {
+        display: none !important;
+    }
+}
 "#
     }
 }
+
+
+
