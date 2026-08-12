@@ -374,11 +374,21 @@ pre code {
     overflow-x: auto;
     overflow-y: hidden;
     padding: 6px 0;
+    max-width: 100%;
 }
 .math-display-block {
     text-align: center;
     margin: 1em 0;
 }
+/* Align math blocks inside list items cleanly to the left under bullet text */
+li .katex-display, li .math-display-block {
+    text-align: left !important;
+    margin: 0.5em 0;
+}
+li .katex-display > .katex {
+    text-align: left !important;
+}
+
 body.theme-dark .katex { color: #e6edf3; }
 body.theme-light .katex { color: #1f2328; }
 body.theme-sepia .katex { color: #5f4b32; }
@@ -601,6 +611,48 @@ hr {
     .copy-code-btn, .pdf-footer {
         display: none !important;
     }
+
+    /* KaTeX PDF export color & overflow fixes */
+    .katex, .katex-display, .katex * {
+        color: #1f2328 !important;
+        opacity: 1 !important;
+    }
+
+    .katex-display, .math-display-block {
+        overflow: visible !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+        max-width: 100% !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    /* GFM Callouts / Alerts & KBD PDF export fixes */
+    blockquote.markdown-alert, blockquote.markdown-alert p, blockquote.markdown-alert li, blockquote.markdown-alert div {
+        color: #1f2328 !important;
+        opacity: 1 !important;
+    }
+
+    blockquote.markdown-alert-note { border-left-color: #0969da !important; background-color: #ddf4ff !important; }
+    blockquote.markdown-alert-note .markdown-alert-title { color: #0969da !important; }
+
+    blockquote.markdown-alert-tip { border-left-color: #1a7f37 !important; background-color: #dafbe1 !important; }
+    blockquote.markdown-alert-tip .markdown-alert-title { color: #1a7f37 !important; }
+
+    blockquote.markdown-alert-important { border-left-color: #8250df !important; background-color: #fbefff !important; }
+    blockquote.markdown-alert-important .markdown-alert-title { color: #8250df !important; }
+
+    blockquote.markdown-alert-warning { border-left-color: #9a6700 !important; background-color: #fff8c5 !important; }
+    blockquote.markdown-alert-warning .markdown-alert-title { color: #9a6700 !important; }
+
+    blockquote.markdown-alert-caution { border-left-color: #cf222e !important; background-color: #ffebe9 !important; }
+    blockquote.markdown-alert-caution .markdown-alert-title { color: #cf222e !important; }
+
+    kbd {
+        background-color: #f6f8fa !important;
+        color: #24292f !important;
+        border: 1px solid #d0d7de !important;
+    }
 }
 "##
     }
@@ -632,5 +684,19 @@ mod tests {
         let html = MarkdownEngine::render(md, "dark");
         assert!(html.contains("<table"));
         assert!(html.contains("border-collapse: separate;"));
+    }
+
+    #[test]
+    fn test_print_math_styles() {
+        let html = MarkdownEngine::render("$$E=mc^2$$", "dark");
+        assert!(html.contains("color: #1f2328 !important;"));
+        assert!(html.contains("overflow: visible !important;"));
+    }
+
+    #[test]
+    fn test_print_alert_styles() {
+        let html = MarkdownEngine::render("> [!NOTE]\n> Test note", "dark");
+        assert!(html.contains("blockquote.markdown-alert"));
+        assert!(html.contains("blockquote.markdown-alert-note"));
     }
 }
