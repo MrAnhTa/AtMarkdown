@@ -124,53 +124,90 @@ pub fn render_markdown(md_text: String, theme: String) -> RenderResult {
 
 #[tauri::command]
 pub fn export_html(html_content: String, path: String) -> Result<(), String> {
-    fs::write(path, html_content).map_err(|e| format!("Failed to export HTML: {}", e))
+    fs::write(&path, html_content).map_err(|e| format!("Failed to export HTML: {}", e))
 }
 
 #[tauri::command]
 pub fn get_welcome_doc() -> String {
-    r#"# Welcome to AtMarkdown Reader & Editor 🚀 (Rust Edition)
+    r#"# Welcome to AtMarkdown Reader & Editor 🚀
 
-AtMarkdown là ứng dụng đọc và chỉnh sửa file **Markdown** hiện đại, siêu nhẹ và phản hồi tức thì được phát triển bằng **Rust**.
-
-## 🌟 Key Features
-
-- **📖 Reader Mode**: Hiển thị Markdown theo phong cách GitHub cực đẹp.
-- **✏️ Editor Mode**: Chỉnh sửa Plain Text với dòng số, phím tắt nhanh và tìm kiếm `Ctrl+F`.
-- **⚡ Split Live Preview**: Chỉnh sửa ở bảng bên trái và xem trực tiếp kết quả bên phải.
-- **📌 Auto Outline**: Tự động trích xuất tiêu đề thành cây mục lục bên trái.
-- **🎨 Custom Themes**: Chuyển đổi linh hoạt giữa **Dark Mode**, **Light Mode** và **Sepia Mode**.
-- **📂 Drag & Drop**: Kéo thả trực tiếp file `.md` từ máy tính vào ứng dụng để mở nhanh.
+AtMarkdown là ứng dụng đọc và chỉnh sửa file **Markdown** hiện đại, hỗ trợ công thức Toán LaTeX, Sơ đồ Mermaid, Highlight code và GFM Callouts.
 
 ---
 
-## 🛠️ Code Highlight Example
+## 📐 Công thức Toán học (LaTeX / KaTeX Math)
+
+* **Chỉ số Kỳ vọng (Expectancy)**:
+      $$\text{Expectancy} = (\text{Win Rate} \times \text{Average Win R}) - (\text{Loss Rate} \times \text{Average Loss R})$$
+* **Chỉ số Yếu tố Lợi nhuận (Profit Factor)**:
+      $$\text{Profit Factor} = \frac{\sum \text{Gross Profits (in R)}}{\sum \text{Gross Losses (in R)}}$$
+
+* **Công thức Chuẩn hoá (Inline Math)**: Phương trình $E = mc^2$ và căn bậc hai $\sqrt{x^2 + y^2} = r$.
+
+---
+
+## 💡 GFM Callouts & Alerts
+
+> [!NOTE]
+> Ghi chú quan trọng cho tài liệu hoặc hướng dẫn nhanh.
+
+> [!TIP]
+> Bấm phím <kbd>Ctrl</kbd> + <kbd>S</kbd> để lưu tài liệu hoặc <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> để Save As.
+
+> [!WARNING]
+> Cảnh báo trước khi thay đổi cấu hình hoặc xuất dữ liệu!
+
+---
+
+## 📊 Sơ đồ Mermaid (Diagrams)
+
+```mermaid
+graph TD;
+    A[Nhập Markdown] --> B{Parse Engine};
+    B -- Math LaTeX --> C[KaTeX Renderer];
+    B -- Code Block --> D[Highlight.js];
+    B -- Diagram --> E[Mermaid.js];
+    C --> F[Preview Visual HTML];
+    D --> F;
+    E --> F;
+```
+
+---
+
+## 🛠️ Code Syntax Highlighting
+
+```python
+def calculate_expectancy(win_rate, avg_win_r, loss_rate, avg_loss_r):
+    """Tính toán chỉ số Expectancy chuẩn trong Trading"""
+    return (win_rate * avg_win_r) - (loss_rate * avg_loss_r)
+
+print("Expectancy:", calculate_expectancy(0.55, 2.0, 0.45, 1.0))
+```
 
 ```rust
 fn greet(name: &str) -> String {
-    // Rust Markdown Engine
     format!("Hello, {}! Enjoy blazing-fast Markdown editing.", name)
-}
-
-fn main() {
-    println!("{}", greet("Developer"));
 }
 ```
 
+---
+
 ## 📋 Task List & Tables
 
-- [x] Chuyển đổi toàn bộ sang ngôn ngữ Rust
-- [x] Kích thước file `.exe` cực nhẹ (< 8MB)
-- [x] Tốc độ khởi động tức thì (< 100ms)
-- [x] Khôi phục toàn bộ giao diện và phím tắt của bản Python
+- [x] Tích hợp KaTeX rendering công thức toán block `$$` và inline `$`
+- [x] Hỗ trợ GFM Callouts `[!NOTE]`, `[!TIP]`, `[!WARNING]`
+- [x] Tích hợp Highlight.js cho 180+ ngôn ngữ lập trình
+- [x] Sơ đồ Mermaid.js tự động thay đổi theo Theme
+- [x] Phím bấm `<kbd>` styling
 
-| Feature | Reader Mode | Editor Mode | Split View |
+| Feature | Reader View | Split Preview | Export HTML / PDF |
 | :--- | :---: | :---: | :---: |
-| Preview | ✅ | ❌ | ✅ |
-| Editing | ❌ | ✅ | ✅ |
-| Speed | ⚡⚡⚡ | ⚡⚡⚡ | ⚡⚡⚡ |
+| Math LaTeX | ✅ | ✅ | ✅ |
+| Syntax Highlighting | ✅ | ✅ | ✅ |
+| Mermaid Diagrams | ✅ | ✅ | ✅ |
+| Custom Themes | ✅ | ✅ | ✅ |
 
 ---
-*Bắt đầu bằng cách bấm vào nút **📂 Open** trên thanh công cụ hoặc kéo thả file `.md` vào đây!*
+*Bắt đầu bằng cách bấm nút **📂 Open** trên thanh công cụ hoặc kéo thả file `.md` vào đây!*
 "#.to_string()
 }
