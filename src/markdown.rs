@@ -156,15 +156,13 @@ document.addEventListener("DOMContentLoaded", function() {
         wrapper.appendChild(btn);
     });
 
-    // 7. Mouse wheel scroll & scroll ratio posting
-    window.addEventListener("wheel", function(e) {
-        if (e.deltaY) {
-            window.scrollBy(0, e.deltaY);
-        }
-    }, { passive: true });
-
+    // 7. Post the native browser scroll position to Split View.
+    // Wheel/touchpad input is intentionally not handled here: WebView2 already
+    // provides native scrolling, and manually calling scrollBy would apply every
+    // gesture twice.
     let isPosting = false;
     window.addEventListener("scroll", function() {
+        if (window.__atMarkdownProgrammaticScroll) return;
         if (!isPosting) {
             isPosting = true;
             requestAnimationFrame(function() {
@@ -321,7 +319,7 @@ impl MarkdownEngine {
 html {
     height: 100%;
     overflow-y: auto;
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
 }
 :root {
     --bg-dark: #0d1117; --text-dark: #e6edf3; --muted-dark: #8b949e; --border-dark: #30363d; --code-dark: #161b22; --link-dark: #2f81f7;
@@ -698,5 +696,13 @@ mod tests {
         let html = MarkdownEngine::render("> [!NOTE]\n> Test note", "dark");
         assert!(html.contains("blockquote.markdown-alert"));
         assert!(html.contains("blockquote.markdown-alert-note"));
+    }
+
+    #[test]
+    fn test_preview_uses_native_scroll() {
+        let html = MarkdownEngine::render("# Scroll test", "dark");
+        assert!(html.contains("scroll-behavior: auto;"));
+        assert!(!html.contains("window.addEventListener(\"wheel\""));
+        assert!(!html.contains("window.scrollBy(0, e.deltaY)"));
     }
 }

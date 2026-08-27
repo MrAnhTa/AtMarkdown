@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sidebar = document.getElementById("sidebar");
     const editorContainer = document.getElementById("editor-container");
     const viewerContainer = document.getElementById("viewer-container");
+    const sidebarHandle = document.getElementById("handle-sidebar");
+    const editorHandle = document.getElementById("handle-editor");
     const formattingBar = document.getElementById("formatting-bar");
     const filePathIndicator = document.getElementById("file-path-indicator");
 
@@ -44,56 +46,77 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    let isSyncScrolling = false;
+    let editorToReaderFrame = null;
+    let readerToEditorFrame = null;
+    let pendingReaderRatio = 0;
+    let expectedEditorScrollTop = null;
+
+    function clampScrollRatio(ratio) {
+        return Math.max(0, Math.min(1, ratio));
+    }
 
     // Synchronized Scroll: Editor to Reader
     function syncEditorToReader() {
-        if (modeSelect.value !== "split" || isSyncScrolling) return;
-        isSyncScrolling = true;
+        if (modeSelect.value !== "split") return;
 
-        const maxEditorScroll = editor.scrollHeight - editor.clientHeight;
-        if (maxEditorScroll > 0) {
-            const ratio = editor.scrollTop / maxEditorScroll;
+        // Ignore the scroll event caused by Reader -> Editor synchronization.
+        if (expectedEditorScrollTop !== null) {
+            if (Math.abs(editor.scrollTop - expectedEditorScrollTop) <= 1) {
+                expectedEditorScrollTop = null;
+                return;
+            }
+            expectedEditorScrollTop = null;
+        }
+
+        // Coalesce high-frequency touchpad/wheel events to the display refresh
+        // rate instead of throttling them with a timer.
+        if (editorToReaderFrame !== null) return;
+        editorToReaderFrame = requestAnimationFrame(() => {
+            editorToReaderFrame = null;
+
+            const maxEditorScroll = editor.scrollHeight - editor.clientHeight;
+            if (maxEditorScroll <= 0) return;
+
+            const ratio = clampScrollRatio(editor.scrollTop / maxEditorScroll);
             const win = previewFrame.contentWindow;
             if (win && win.document && win.document.documentElement) {
                 const doc = win.document.documentElement;
                 const maxReaderScroll = doc.scrollHeight - win.innerHeight;
                 if (maxReaderScroll > 0) {
-                    win.scrollTo({ top: ratio * maxReaderScroll, behavior: "auto" });
+                    // CSS keeps normal scrolling native; this synchronized update
+                    // must be immediate so repeated wheel events never queue animations.
+                    win.__atMarkdownProgrammaticScroll = true;
+                    win.scrollTo(0, ratio * maxReaderScroll);
+                    win.requestAnimationFrame(() => {
+                        win.__atMarkdownProgrammaticScroll = false;
+                    });
                 }
             }
-        }
-
-        setTimeout(() => { isSyncScrolling = false; }, 50);
+        });
     }
 
     window.onEditorScrollSync = syncEditorToReader;
 
     // Synchronized Scroll: Reader to Editor via postMessage from iframe
     window.addEventListener("message", (e) => {
-        if (e.data && e.data.type === "READER_SCROLL" && modeSelect.value === "split") {
-            if (isSyncScrolling) return;
-            isSyncScrolling = true;
+        if (e.source !== previewFrame.contentWindow ||
+            !e.data || e.data.type !== "READER_SCROLL" ||
+            modeSelect.value !== "split" || !Number.isFinite(e.data.ratio)) {
+            return;
+        }
 
-            const ratio = e.data.ratio;
+        const ratio = clampScrollRatio(e.data.ratio);
+        pendingReaderRatio = ratio;
+        if (readerToEditorFrame !== null) return;
+        readerToEditorFrame = requestAnimationFrame(() => {
+            readerToEditorFrame = null;
             const maxEditorScroll = editor.scrollHeight - editor.clientHeight;
             if (maxEditorScroll > 0) {
-                editor.scrollTop = ratio * maxEditorScroll;
-                const lineNumbers = document.getElementById("line-numbers");
-                if (lineNumbers) lineNumbers.scrollTop = editor.scrollTop;
+                expectedEditorScrollTop = pendingReaderRatio * maxEditorScroll;
+                editor.scrollTop = expectedEditorScrollTop;
             }
-
-            setTimeout(() => { isSyncScrolling = false; }, 50);
-        }
+        });
     });
-
-    // Forward mouse wheel events over viewer container to preview iframe
-    viewerContainer.addEventListener("wheel", (e) => {
-        const win = previewFrame.contentWindow;
-        if (win && e.deltaY) {
-            win.scrollBy(0, e.deltaY);
-        }
-    }, { passive: true });
 
     // Live Render Function
     async function performRender() {
@@ -311,24 +334,49 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // View Mode & Theme Switchers
+    function updateSplitterVisibility() {
+        const sidebarVisible = sidebar.style.display !== "none";
+        sidebarHandle.hidden = !sidebarVisible;
+
+        // This handle only separates two visible panels. Leaving it visible in a
+        // single-panel mode creates a second, non-functional handle beside the
+        // sidebar splitter.
+        editorHandle.hidden = modeSelect.value !== "split";
+    }
+
+    function setSidebarVisible(visible) {
+        sidebar.style.display = visible ? "flex" : "none";
+        updateSplitterVisibility();
+    }
+
+    function toggleSidebar() {
+        setSidebarVisible(sidebar.style.display === "none");
+    }
+
     function applyViewMode(mode) {
         modeSelect.value = mode;
         if (mode === "reader") {
             editorContainer.style.display = "none";
-            viewerContainer.style.display = "block";
+            viewerContainer.style.display = "flex";
+            viewerContainer.style.flex = "1";
             formattingBar.style.display = "none";
             statMode.textContent = "Mode: Reader View";
         } else if (mode === "editor") {
             editorContainer.style.display = "flex";
+            editorContainer.style.flex = "1";
             viewerContainer.style.display = "none";
             formattingBar.style.display = "flex";
             statMode.textContent = "Mode: Editor View";
         } else { // split
             editorContainer.style.display = "flex";
-            viewerContainer.style.display = "block";
+            // Restore a previously dragged width when returning to Split View.
+            editorContainer.style.flex = editorContainer.style.width ? "none" : "1";
+            viewerContainer.style.display = "flex";
+            viewerContainer.style.flex = "1";
             formattingBar.style.display = "flex";
             statMode.textContent = "Mode: Split Live Preview";
         }
+        updateSplitterVisibility();
     }
 
     function applyTheme(theme) {
@@ -372,7 +420,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     btnToggleSidebar.addEventListener("click", () => {
-        sidebar.style.display = sidebar.style.display === "none" ? "flex" : "none";
+        toggleSidebar();
     });
 
     // Sidebar Tabs
@@ -434,7 +482,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 1. Sidebar Splitter
     setupSplitter("handle-sidebar", () => sidebar, (newWidth) => {
-        const clamped = Math.max(120, Math.min(500, newWidth));
+        const clamped = Math.max(150, Math.min(500, newWidth));
         sidebar.style.width = `${clamped}px`;
     });
 
@@ -442,7 +490,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupSplitter("handle-editor", () => editorContainer, (newWidth) => {
         const containerWidth = document.getElementById("main-splitter").getBoundingClientRect().width;
         const sidebarWidth = sidebar.style.display !== "none" ? sidebar.getBoundingClientRect().width : 0;
-        const availableWidth = containerWidth - sidebarWidth - 12;
+        const visibleHandleWidth = [sidebarHandle, editorHandle].reduce((width, handle) => {
+            return width + (handle.hidden ? 0 : handle.getBoundingClientRect().width);
+        }, 0);
+        const availableWidth = containerWidth - sidebarWidth - visibleHandleWidth;
 
         const clamped = Math.max(150, Math.min(availableWidth - 150, newWidth));
         editorContainer.style.flex = "none";
@@ -471,7 +522,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (window.toggleSearchPanel) window.toggleSearchPanel();
             } else if (e.key === "b" || e.key === "B") {
                 e.preventDefault();
-                sidebar.style.display = sidebar.style.display === "none" ? "flex" : "none";
+                toggleSidebar();
             }
         }
     });

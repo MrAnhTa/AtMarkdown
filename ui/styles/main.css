@@ -170,10 +170,15 @@ select {
 
 .splitter-handle {
     width: 4px;
+    flex: 0 0 4px;
     background-color: var(--border-color);
     cursor: col-resize;
     z-index: 10;
     transition: background-color 0.2s;
+}
+
+.splitter-handle[hidden] {
+    display: none;
 }
 
 .splitter-handle:hover, .splitter-handle.dragging {
@@ -184,7 +189,6 @@ select {
 .sidebar {
     width: 220px;
     background-color: var(--bg-app);
-    border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     min-width: 150px;
