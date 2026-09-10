@@ -14,7 +14,8 @@ class TestMarkdownEngine(unittest.TestCase):
         self.assertIn("Header 1", html_dark)
         self.assertIn("<strong>bold</strong>", html_dark)
         self.assertIn("code", html_dark)
-        self.assertIn("var(--bg-color)", html_dark)
+        self.assertIn('class="theme-dark"', html_dark)
+        self.assertIn('class="theme-light"', html_light)
 
     def test_toc_extraction(self):
         md_text = "# Main Title\n\n## Sub Section 1\n\n### Detail A\n\n## Sub Section 2"

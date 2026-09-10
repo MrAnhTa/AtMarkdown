@@ -1,5 +1,5 @@
-PySide6>=6.6.0
-markdown>=3.5.0
-pygments>=2.17.0
-pymdown-extensions>=10.7.0
-beautifulsoup4>=4.12.0
+PySide6>=6.8,<7
+markdown-it-py>=3,<5
+mdit-py-plugins>=0.4,<1
+bleach>=6.1,<7
+beautifulsoup4>=4.12,<5

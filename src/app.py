@@ -45,6 +45,10 @@ def main():
     if not icon.isNull():
         app.setWindowIcon(icon)
 
+    if len(sys.argv) == 3 and sys.argv[1] == "--smoke-test":
+        from src.smoke import verify_installation
+        sys.exit(verify_installation(app, sys.argv[2]))
+
     config = ConfigManager()
     window = MainWindow(config)
     if not icon.isNull():

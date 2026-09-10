@@ -1,123 +1,83 @@
-# AtMd - Modern Windows Markdown Reader & Editor
+# AtMarkdown — Python desktop app
 
-**AtMd** is a modern, lightweight, high-performance Markdown reader and editor for Windows built with **Python 3.13** and **PySide6 (Qt 6)**. It offers GitHub-flavored Markdown rendering, real-time live preview, document outline navigation, theme customization, document statistics, and export features.
+This branch implements the AtMarkdown reader and editor in Python with PySide6 and Qt WebEngine. Feature parity is based on Rust `main` at `d75bd43`; application signing is intentionally excluded. Rust and Tauri are not required to run or build this branch.
 
-![Python Version](https://img.shields.io/badge/Python-3.13-blue.svg)
-![UI Framework](https://img.shields.io/badge/GUI-PySide6-green.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+## Run on Windows
 
----
+Python 3.10+ is required (tested with Python 3.12.10 and PySide6 6.11.2).
 
-## ✨ Features
-
-- 📂 **File Picker & Drag-and-Drop**: Easily browse files from your computer or drag `.md` files directly into the window.
-- ⚡ **Triple View Modes**:
-  - 📖 **Reader Mode**: Distraction-free GitHub-style rendered preview.
-  - ✏️ **Editor Mode**: Plain-text editor with line numbers, code font, and search/replace (`Ctrl+F`).
-  - ⚡ **Split Live Preview**: Real-time side-by-side editing and instant rendering.
-- 🎨 **Multiple Themes**: Seamlessly switch between **Dark Mode**, **Light Mode**, and **Sepia Mode**.
-- 📌 **Auto Table of Contents (Outline)**: Automatically extracts `#`, `##`, `###` headings into an interactive sidebar outline. Click any heading to jump to that section.
-- 🛠️ **Quick Formatting Toolbar**: 1-click insertion for Bold, Italic, Headings, Code Blocks, Links, Images, Quotes, Lists, Checklists, and Tables.
-- 📊 **Real-Time Document Statistics**: Bottom status bar tracking line count, word count, character count, and estimated reading time.
-- 🕒 **Recent Files History**: Quick sidebar access to reopen your recent Markdown documents.
-- 🌐 **Export Options**: Export rendered Markdown documents to standalone **HTML** or **PDF** files.
-
----
-
-## 🛠️ Prerequisites
-
-- **Python 3.13** or higher installed on your Windows machine.
-- Git (optional, for cloning).
-
----
-
-## 📥 Installation
-
-1. **Clone or Navigate to the Repository Directory**:
-   ```bash
-   cd d:\Working\ToolsBuilt\Repo\MarkdownReader
-   ```
-
-2. **Create a Virtual Environment (Python 3.13)**:
-   ```powershell
-   py -3.13 -m venv venv
-   ```
-
-3. **Activate Virtual Environment & Install Dependencies**:
-   ```powershell
-   # Windows PowerShell
-   .\venv\Scripts\Activate.ps1
-
-   # Install required packages
-   pip install -r requirements.txt
-   ```
-
----
-
-## 🚀 Running & Building the Application
-
-### Launch GUI App:
 ```powershell
-.\venv\Scripts\python run.py
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe run.py
+# Or open a document directly:
+.\.venv\Scripts\python.exe run.py "C:\Documents\notes.md"
 ```
 
-### Build Standalone Executable (.exe):
-You can automatically build the standalone Windows release `.exe` into the `output/` folder by running either script:
+With uv, use `uv venv .venv` and `uv pip install --python .venv/Scripts/python.exe -r requirements.txt` instead of the first two commands.
 
-**PowerShell**:
-```powershell
-.\build_exe.ps1
-```
+## Features
 
-**Command Prompt (CMD)**:
-```cmd
-build_exe.bat
-```
+- Reader, editor and split preview; 150 ms debounce and two-way proportional scroll synchronization.
+- Native file dialogs, new/open/save/save as, drag and drop, recent files and protection for unsaved changes.
+- Line numbers, undo/redo, clipboard operations, wrapping, forward/backward find, and the complete formatting toolbar from main.
+- Dark, light and sepia themes across the application and rendered content.
+- Outline navigation in both preview and editor, including duplicate titles and correct source lines; headings inside code fences are excluded.
+- LaTeX through KaTeX: `$...$`, `$$...$$`, `\(...\)`, `\[...\]`, supported equation environments and math/latex/katex fences. Math also works inside lists, quotes and tables.
+- Mermaid diagrams, Highlight.js syntax highlighting and copy-code buttons.
+- All five GitHub alerts: NOTE, TIP, IMPORTANT, WARNING and CAUTION.
+- Tables, strikethrough, task checkboxes, keyboard caps, images, links, footnotes and definition lists. Task checkboxes in the preview are temporary; edit the Markdown to save their state, as on main.
+- Live line, word and character counts and estimated reading time.
+- Standalone HTML with embedded scripts, CSS, fonts and existing local images. Remote image URLs still require a connection.
+- Asynchronous PDF export waits for diagrams, math, fonts and images, uses a readable light palette and A4 margins, and reports completion/errors. Export uses the current editor text even before live preview catches up.
 
----
+Rendering libraries and the full KaTeX woff2 font set are bundled locally. Preview content is loaded from temporary files so large documents are not limited by Qt's `setHtml` data URL size. Raw HTML is sanitized before loading; external web links open in the default browser, and local Markdown links open in the editor.
 
-## ⌨️ Keyboard Shortcuts
+Settings and recent files are stored in `%USERPROFILE%\.atmd\settings.json`.
+
+## Shortcuts
 
 | Shortcut | Action |
-| :--- | :--- |
-| `Ctrl + O` | Open Markdown File |
-| `Ctrl + S` | Save Current Document |
-| `Ctrl + Shift + S` | Save As... |
-| `Ctrl + N` | Create New File |
-| `Ctrl + F` | Search / Find in Editor |
-| `Ctrl + B` | Toggle Left Sidebar |
-| `Ctrl + Shift + H` | Export to HTML |
-| `Ctrl + Shift + P` | Export to PDF |
+| --- | --- |
+| Ctrl+O | Open |
+| Ctrl+N | New |
+| Ctrl+S | Save |
+| Ctrl+Shift+S | Save as |
+| Ctrl+F | Toggle editor search; reveals the editor when in reader mode |
+| Ctrl+B | Toggle sidebar |
+| Ctrl+Z / Ctrl+Y | Undo / redo |
+| Enter in search | Find next |
+| Escape in search | Close search |
 
----
+## Build the unsigned Windows executable
 
-## 📁 Project Structure
-
-```
-MarkdownReader/
-├── venv/                  # Python 3.13 virtual environment
-├── requirements.txt       # Project dependencies
-├── run.py                 # Application entrypoint launcher
-├── README.md              # Project documentation
-├── tests/
-│   └── test_md_engine.py  # Unit tests for Markdown parser
-└── src/
-    ├── app.py             # QApplication initialization
-    ├── config.py          # Settings and recent files persistence
-    ├── ui/
-    │   ├── main_window.py # Main window layout & splitters
-    │   ├── viewer.py      # HTML preview panel
-    │   ├── editor.py      # Line-numbered code editor & search bar
-    │   ├── sidebar.py     # Outline TOC & Recent files sidebar
-    │   ├── formatting_bar.py # Quick Markdown formatting toolbar
-    │   └── stats_bar.py   # Document statistics status bar
-    └── utils/
-        ├── md_parser.py   # Markdown parsing engine & syntax highlighter
-        └── exporter.py    # HTML & PDF export utilities
+```powershell
+.\build_release.ps1
 ```
 
----
+The script installs dependencies, runs the test suite, and builds `dist/AtMd.exe` with PyInstaller. The executable bundles Python, Qt WebEngine, its helper process and local rendering assets; no Python installation is needed on the destination Windows computer. This package is substantially larger than the Rust build because it includes Python and Chromium.
 
-## 📄 License
+Manual packaging:
 
-This project is licensed under the MIT License - feel free to use and customize it!
+```powershell
+.\.venv\Scripts\python.exe -m pip install "pyinstaller>=6.10,<7"
+.\.venv\Scripts\python.exe -m PyInstaller --noconfirm AtMd.spec
+```
+
+## Verification
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+Tests exercise the parser, actual Chromium DOM rendering, standalone HTML, malformed diagrams, PDF generation and text extraction, native editing, search, view modes, themes, and unsaved-change protection. Desktop tests use an isolated settings directory and hidden windows. Review artifacts are written to ignored `test-output/`.
+
+To verify the packaged runtime, without opening a visible window or changing personal settings:
+
+```powershell
+.\dist\AtMd.exe --smoke-test test-output\release-check.json
+```
+
+The check writes a JSON result, screenshot and PDF, and exits with code 0 on success.
+
+See [PORTING_PARITY.md](PORTING_PARITY.md) for the source-to-Python feature mapping.

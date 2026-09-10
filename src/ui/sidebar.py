@@ -68,7 +68,7 @@ class SidebarWidget(QWidget):
 
         # 2. Recent Files Tab
         self.recent_list = QListWidget()
-        self.recent_list.itemDoubleClicked.connect(self._on_recent_clicked)
+        self.recent_list.itemClicked.connect(self._on_recent_clicked)
 
         self.tabs.addTab(self.toc_tree, "📌 Outline")
         self.tabs.addTab(self.recent_list, "🕒 Recent")

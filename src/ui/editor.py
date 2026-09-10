@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import (
     QPainter, QColor, QTextFormat, QKeySequence, QTextCursor,
-    QFont, QIcon, QShortcut
+    QFont, QIcon, QShortcut, QTextDocument
 )
 from PySide6.QtCore import QSize, Qt, Signal, QRect
 
@@ -20,6 +20,9 @@ class LineNumberArea(QWidget):
     def paintEvent(self, event):
         self.code_editor.line_number_area_paint_event(event)
 
+    def wheelEvent(self, event):
+        self.code_editor.wheelEvent(event)
+
 
 class MarkdownEditor(QPlainTextEdit):
     text_modified = Signal()
@@ -27,6 +30,7 @@ class MarkdownEditor(QPlainTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.line_number_area = LineNumberArea(self)
+        self.setAcceptDrops(False)  # File drops are handled by the main window.
 
         font = QFont("Cascadia Code", 11)
         font.setStyleHint(QFont.StyleHint.Monospace)
@@ -243,7 +247,7 @@ class MarkdownEditor(QPlainTextEdit):
     def insert_formatting(self, prefix: str, suffix: str):
         cursor = self.textCursor()
         if cursor.hasSelection():
-            selected_text = cursor.selectedText()
+            selected_text = cursor.selectedText().replace('\u2029', '\n')
             cursor.insertText(f"{prefix}{selected_text}{suffix}")
         else:
             cursor.insertText(f"{prefix}{suffix}")
@@ -310,6 +314,8 @@ class EditorSearchPanel(QWidget):
         layout.addWidget(self.close_btn)
 
         self.hide()
+        self.escape_shortcut = QShortcut(QKeySequence("Escape"), self)
+        self.escape_shortcut.activated.connect(self.hide)
 
     def search_text(self, text: str):
         if not text:
@@ -335,10 +341,10 @@ class EditorSearchPanel(QWidget):
         text = self.search_input.text()
         if not text:
             return
-        found = self.editor.find(text, QPlainTextEdit.FindFlag.FindBackward)
+        found = self.editor.find(text, QTextDocument.FindFlag.FindBackward)
         if not found:
             # Wrap around to end
             cursor = self.editor.textCursor()
             cursor.movePosition(QTextCursor.MoveOperation.End)
             self.editor.setTextCursor(cursor)
-            self.editor.find(text, QPlainTextEdit.FindFlag.FindBackward)
+            self.editor.find(text, QTextDocument.FindFlag.FindBackward)

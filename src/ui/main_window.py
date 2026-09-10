@@ -1,11 +1,12 @@
 import os
 import sys
+from pathlib import Path
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QSplitter,
     QFileDialog, QMessageBox, QToolBar, QComboBox, QToolButton,
     QStackedWidget, QStyle, QApplication
 )
-from PySide6.QtGui import QAction, QIcon, QKeySequence, QDragEnterEvent, QDropEvent
+from PySide6.QtGui import QAction, QIcon, QKeySequence, QDragEnterEvent, QDropEvent, QTextCursor
 from PySide6.QtCore import Qt, QTimer
 
 from src.config import ConfigManager
@@ -26,6 +27,8 @@ class MainWindow(QMainWindow):
 
         self.current_file_path = None
         self.is_modified = False
+        self._pdf_jobs = set()
+        self._syncing_scroll = False
 
         # Live render timer to prevent excessive re-rendering on keypresses
         self.render_timer = QTimer()
@@ -97,6 +100,11 @@ class MainWindow(QMainWindow):
 
         # 3c. Viewer Widget
         self.viewer = MarkdownViewer()
+        self.viewer.link_clicked.connect(self.open_file)
+        self.viewer.scroll_ratio_changed.connect(self._sync_reader_scroll)
+        self.viewer.render_failed.connect(lambda message: self.statusBar().showMessage(message, 10000))
+        self.editor.verticalScrollBar().valueChanged.connect(self._sync_editor_scroll)
+        self.main_splitter.setChildrenCollapsible(False)
 
         # Add to splitter
         self.main_splitter.addWidget(self.sidebar)
@@ -116,6 +124,7 @@ class MainWindow(QMainWindow):
         self._setup_menus()
         self._apply_theme(self.config.get("theme", "dark"))
         self._apply_view_mode(self.config.get("view_mode", "split"))
+        self.sidebar.setVisible(self.config.get("sidebar_visible", True))
 
     def _setup_menus(self):
         menubar = self.menuBar()
@@ -218,7 +227,7 @@ class MainWindow(QMainWindow):
 
         find_act = QAction("🔍 Find in Editor...", self)
         find_act.setShortcut(QKeySequence.StandardKey.Find)
-        find_act.triggered.connect(lambda: self.search_panel.show() or self.search_panel.search_input.setFocus())
+        find_act.triggered.connect(self._show_search)
         edit_menu.addAction(find_act)
 
         # View Menu
@@ -325,6 +334,9 @@ class MainWindow(QMainWindow):
         top_bar.addWidget(self.theme_combo)
 
         self.addToolBar(Qt.ToolBarArea.TopToolBarArea, top_bar)
+        self.removeToolBar(self.format_toolbar)
+        self.addToolBarBreak(Qt.ToolBarArea.TopToolBarArea)
+        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.format_toolbar)
 
     def _load_initial_state(self):
         recent_files = self.config.get_recent_files()
@@ -337,55 +349,13 @@ class MainWindow(QMainWindow):
             self._load_sample_welcome_doc()
 
     def _load_sample_welcome_doc(self):
-        welcome_md = """# Welcome to AtMd Reader & Editor 🚀
-
-AtMd là ứng dụng đọc và chỉnh sửa file **Markdown** hiện đại, nhẹ và mượt mà trên Windows.
-
-## 🌟 Key Features
-
-- **📖 Reader Mode**: Hiển thị Markdown theo phong cách GitHub cực đẹp.
-- **✏️ Editor Mode**: Chỉnh sửa Plain Text với dòng số, phím tắt nhanh và tìm kiếm `Ctrl+F`.
-- **⚡ Split Live Preview**: Chỉnh sửa ở bảng bên trái và xem trực tiếp kết quả bên phải.
-- **📌 Auto Outline**: Tự động trích xuất tiêu đề thành cây mục lục bên trái.
-- **🎨 Custom Themes**: Chuyển đổi linh hoạt giữa **Dark Mode**, **Light Mode** và **Sepia Mode**.
-- **📂 Drag & Drop**: Kéo thả trực tiếp file `.md` từ máy tính vào ứng dụng để mở nhanh.
-
----
-
-## 🛠️ Code Highlight Example
-
-```python
-def greet(name: str) -> str:
-    # Python 3.13 Markdown Engine
-    return f"Hello, {name}! Enjoy writing Markdown."
-
-print(greet("Developer"))
-```
-
-## 📋 Task List & Tables
-
-- [x] Chọn file Markdown từ máy tính
-- [x] Bật bảng chỉnh sửa Plain Text
-- [x] Tự động cập nhật Live Preview
-- [ ] Export sang HTML & PDF
-
-| Feature | Reader Mode | Editor Mode | Split View |
-| :--- | :---: | :---: | :---: |
-| Preview | ✅ | ❌ | ✅ |
-| Editing | ❌ | ✅ | ✅ |
-| Speed | ⚡⚡⚡ | ⚡⚡⚡ | ⚡⚡⚡ |
-
----
-*Bắt đầu bằng cách bấm vào nút **📂 Open** trên thanh công cụ hoặc kéo thả file `.md` vào đây!*
-"""
+        welcome_md = (Path(__file__).resolve().parents[1] / "assets" / "welcome.md").read_text(encoding="utf-8")
         self.editor.setPlainText(welcome_md)
+        self.is_modified = False
         self._update_window_title()
         self._trigger_render()
 
     def choose_file_dialog(self):
-        if not self._maybe_save_changes():
-            return
-
         file_path, _ = QFileDialog.getOpenFileName(
             self,
             "Open Markdown File",
@@ -396,17 +366,20 @@ print(greet("Developer"))
             self.open_file(file_path)
 
     def open_file(self, file_path: str):
+        if not self._maybe_save_changes():
+            return
         if not os.path.exists(file_path):
             QMessageBox.warning(self, "File Error", f"File not found:\n{file_path}")
             return
 
         try:
-            with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+            with open(file_path, "r", encoding="utf-8-sig") as f:
                 content = f.read()
 
             self.current_file_path = file_path
             self.editor.setPlainText(content)
             self.is_modified = False
+            self.viewer.set_scroll_ratio(0)
 
             self.config.add_recent_file(file_path)
             self.sidebar.update_recent_files(self.config.get_recent_files())
@@ -424,6 +397,8 @@ print(greet("Developer"))
             with open(self.current_file_path, "w", encoding="utf-8") as f:
                 f.write(self.editor.toPlainText())
             self.is_modified = False
+            self.config.add_recent_file(self.current_file_path)
+            self.sidebar.update_recent_files(self.config.get_recent_files())
             self._update_window_title()
             return True
         except Exception as e:
@@ -438,8 +413,12 @@ print(greet("Developer"))
             "Markdown Files (*.md *.markdown);;Text Files (*.txt);;All Files (*.*)"
         )
         if file_path:
+            previous_path = self.current_file_path
             self.current_file_path = file_path
-            return self.save_file()
+            if self.save_file():
+                self._trigger_render()
+                return True
+            self.current_file_path = previous_path
         return False
 
     def new_file(self):
@@ -448,6 +427,7 @@ print(greet("Developer"))
         self.current_file_path = None
         self.editor.setPlainText("")
         self.is_modified = False
+        self.viewer.set_scroll_ratio(0)
         self._update_window_title()
         self._trigger_render()
 
@@ -457,9 +437,13 @@ print(greet("Developer"))
         )
         if file_path:
             md_text = self.editor.toPlainText()
-            html = self.md_engine.render(md_text, theme=self.config.get("theme", "dark"))
-            if DocumentExporter.export_html(html, file_path):
+            try:
+                html = self.md_engine.render(md_text, theme=self.config.get("theme", "dark"),
+                                             base_url_path=self.current_file_path, standalone=True)
+                DocumentExporter.export_html(html, file_path)
                 QMessageBox.information(self, "Export Success", f"Exported successfully to:\n{file_path}")
+            except Exception as error:
+                QMessageBox.critical(self, "Export Error", str(error))
 
     def export_pdf(self):
         file_path, _ = QFileDialog.getSaveFileName(
@@ -467,9 +451,23 @@ print(greet("Developer"))
         )
         if file_path:
             md_text = self.editor.toPlainText()
-            html = self.md_engine.render(md_text, theme=self.config.get("theme", "dark"))
-            if DocumentExporter.export_pdf(html, file_path):
-                QMessageBox.information(self, "Export Success", f"Exported successfully to:\n{file_path}")
+            try:
+                html = self.md_engine.render(md_text, theme="light",
+                                             base_url_path=self.current_file_path)
+                job = DocumentExporter.export_pdf(html, file_path, self)
+                self._pdf_jobs.add(job)
+                job.finished.connect(lambda success, message: self._pdf_finished(job, success, message))
+                self.statusBar().showMessage("Rendering PDF...")
+            except Exception as error:
+                QMessageBox.critical(self, "Export Error", str(error))
+
+    def _pdf_finished(self, job, success, message):
+        self._pdf_jobs.discard(job)
+        self.statusBar().clearMessage()
+        if success:
+            QMessageBox.information(self, "Export Success", f"Exported successfully to:\n{message}")
+        else:
+            QMessageBox.critical(self, "Export Error", message)
 
     def _maybe_save_changes(self) -> bool:
         if not self.is_modified:
@@ -499,7 +497,7 @@ print(greet("Developer"))
         theme = self.config.get("theme", "dark")
 
         # Render preview HTML
-        html = self.md_engine.render(text, theme=theme)
+        html = self.md_engine.render(text, theme=theme, base_url_path=self.current_file_path)
         self.viewer.set_html_content(html, base_url_path=self.current_file_path)
 
         # Update Outline TOC
@@ -511,12 +509,66 @@ print(greet("Developer"))
         self.stats_bar.update_stats(stats)
 
     def _on_toc_heading_selected(self, anchor_id: str):
+        heading = next((h for h in self.md_engine.extract_toc(self.editor.toPlainText()) if h["id"] == anchor_id), None)
+        if heading:
+            block = self.editor.document().findBlockByNumber(heading["line_number"] - 1)
+            cursor = QTextCursor(block)
+            cursor.select(QTextCursor.SelectionType.LineUnderCursor)
+            self.editor.setTextCursor(cursor)
+            self.editor.centerCursor()
         self.viewer.scroll_to_heading(anchor_id)
+
+    def _sync_editor_scroll(self, value):
+        if not self._syncing_scroll and self.config.get("view_mode") == "split":
+            self.viewer.set_scroll_ratio(value / max(1, self.editor.verticalScrollBar().maximum()))
+
+    def _sync_reader_scroll(self, ratio):
+        if self.config.get("view_mode") == "split":
+            bar = self.editor.verticalScrollBar()
+            self._syncing_scroll = True
+            try:
+                bar.setValue(round(ratio * bar.maximum()))
+            finally:
+                self._syncing_scroll = False
+
+    def _show_search(self):
+        if self.config.get("view_mode") == "reader":
+            self._apply_view_mode("split")
+        self.search_panel.setVisible(not self.search_panel.isVisible())
+        if self.search_panel.isVisible():
+            self.search_panel.search_input.setFocus()
+            self.search_panel.search_input.selectAll()
 
     def _on_format_requested(self, prefix: str, suffix: str):
         self.editor.insert_formatting(prefix, suffix)
 
     def _apply_theme(self, theme: str):
+        theme = theme if theme in ("dark", "light", "sepia") else "dark"
+        colors = {
+            "dark": ("#0d1117", "#161b22", "#e6edf3", "#30363d", "#58a6ff"),
+            "light": ("#ffffff", "#f6f8fa", "#24292f", "#d0d7de", "#0969da"),
+            "sepia": ("#fbf0d9", "#f2e3c6", "#5f4b32", "#d5c3a3", "#924500"),
+        }
+        bg, panel, fg, border, accent = colors[theme]
+        # Remove legacy per-widget dark styles so the entire shell follows the theme.
+        for widget in self.findChildren(QWidget):
+            if widget.styleSheet():
+                widget.setStyleSheet("")
+        self.setStyleSheet(f"""
+            QMainWindow, QWidget {{ background: {bg}; color: {fg}; }}
+            QMenuBar, QMenu, QToolBar, QStatusBar, QTabBar::tab {{ background: {panel}; }}
+            QToolBar {{ spacing: 5px; padding: 4px; border-bottom: 1px solid {border}; }}
+            QToolButton, QPushButton, QComboBox {{ padding: 5px 8px; border: 1px solid {border}; border-radius: 4px; }}
+            QToolButton:hover, QPushButton:hover, QMenu::item:selected {{ background: {panel}; color: {accent}; }}
+            QMenu::item {{ padding: 6px 24px; }}
+            QTabBar::tab {{ padding: 8px 12px; }}
+            QTabBar::tab:selected {{ color: {accent}; border-bottom: 2px solid {accent}; }}
+            QTreeWidget, QListWidget, QPlainTextEdit {{ border: none; }}
+            QTreeWidget::item, QListWidget::item {{ padding: 6px 4px; }}
+            QTreeWidget::item:selected, QListWidget::item:selected {{ background: {panel}; color: {accent}; }}
+            QLineEdit {{ border: 1px solid {border}; padding: 4px; }}
+            QSplitter::handle {{ background: {border}; width: 5px; }}
+        """)
         self.config.set("theme", theme)
         self.editor.apply_theme(theme)
         self.viewer.apply_theme(theme)
@@ -577,11 +629,14 @@ print(greet("Developer"))
         urls = event.mimeData().urls()
         if urls:
             file_path = urls[0].toLocalFile()
-            if file_path.endswith(('.md', '.markdown', '.txt')):
-                if self._maybe_save_changes():
-                    self.open_file(file_path)
+            if file_path.lower().endswith(('.md', '.markdown', '.txt')):
+                self.open_file(file_path)
 
     def closeEvent(self, event):
+        if self._pdf_jobs:
+            self.statusBar().showMessage("Please wait for PDF export to finish.", 5000)
+            event.ignore()
+            return
         if self._maybe_save_changes():
             event.accept()
         else:

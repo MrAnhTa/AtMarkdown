@@ -40,8 +40,8 @@ class FormattingToolbar(QToolBar):
 
     def _create_actions(self):
         items = [
-            ("B", "Bold (Ctrl+B)", "**", "**"),
-            ("I", "Italic (Ctrl+I)", "*", "*"),
+            ("B", "Bold", "**", "**"),
+            ("I", "Italic", "*", "*"),
             ("H1", "Heading 1", "# ", ""),
             ("H2", "Heading 2", "## ", ""),
             ("H3", "Heading 3", "### ", ""),
