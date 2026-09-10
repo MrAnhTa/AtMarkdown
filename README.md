@@ -61,7 +61,7 @@ Manual packaging:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install "pyinstaller>=6.10,<7"
-.\.venv\Scripts\python.exe -m PyInstaller --noconfirm AtMd.spec
+.\.venv\Scripts\python.exe -m PyInstaller --clean --noconfirm AtMd.spec
 ```
 
 ## Verification

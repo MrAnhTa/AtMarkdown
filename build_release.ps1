@@ -10,6 +10,6 @@ if ($LASTEXITCODE -ne 0) { throw 'Could not initialize pip.' }
 if ($LASTEXITCODE -ne 0) { throw 'Dependency installation failed.' }
 & .venv/Scripts/python.exe -m unittest discover -s tests -v
 if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
-& .venv/Scripts/python.exe -m PyInstaller --noconfirm AtMd.spec
+& .venv/Scripts/python.exe -m PyInstaller --clean --noconfirm AtMd.spec
 if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
 Write-Host 'Unsigned Python app: dist/AtMd.exe'
